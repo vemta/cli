@@ -6,6 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/vemta/cli/cli"
 	"github.com/vemta/cli/commands"
 )
 
@@ -33,19 +34,11 @@ func init() {
 
 func main() {
 
-	if _, err := exec.LookPath("git"); err != nil {
-		log.Fatal(color.New(color.FgRed).Sprint("Couldn't find Git! Make sure it is installed and added to the path."))
-		return
-	}
-
-	if _, err := exec.LookPath("docker"); err != nil {
-		log.Fatal(color.New(color.FgRed).Sprint("Couldn't find Docker! Make sure it is installed and added to the path."))
-		return
-	}
-
-	if _, err := exec.LookPath("docker-compose"); err != nil {
-		log.Fatal(color.New(color.FgRed).Sprint("Couldn't find docker-compose! Make sure it is installed and added to the path."))
-		return
+	for _, software := range cli.MustHaveSoftwares {
+		if _, err := exec.LookPath(software); err != nil {
+			log.Fatal(color.New(color.FgRed).Sprintf("Couldn't find %s! Make sure it is installed and added to the path.", software))
+			return
+		}
 	}
 
 	root.Execute()
