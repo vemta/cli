@@ -1,12 +1,10 @@
 package main
 
 import (
-	"log"
-	"os/exec"
+	"os"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/vemta/cli/cli"
+	"github.com/spf13/viper"
 	"github.com/vemta/cli/commands"
 )
 
@@ -28,18 +26,33 @@ var pullCmd = &cobra.Command{
 }
 
 func init() {
-	repositories.AddCommand()
+
+	repositories.AddCommand(pullCmd)
 	root.AddCommand(repositories)
 }
 
 func main() {
 
-	for _, software := range cli.MustHaveSoftwares {
+	if err := viper.SafeWriteConfigAs("./config.json"); err != nil {
+		if os.IsNotExist(err) {
+			err = viper.WriteConfigAs("./config.json")
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	viper.AddConfigPath("./")
+	viper.SetConfigName("config")
+	viper.SetConfigType("json")
+	viper.ReadInConfig()
+
+	/*for _, software := range cli.MustHaveSoftwares {
 		if _, err := exec.LookPath(software); err != nil {
 			log.Fatal(color.New(color.FgRed).Sprintf("Couldn't find %s! Make sure it is installed and added to the path.", software))
 			return
 		}
-	}
+	}*/
 
 	root.Execute()
 
