@@ -162,7 +162,7 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 					fmt.Fprintln(stoppingWriter, successMessage(("        ✔ Container stopped successfully!\n")))
 					stoppingWriter.Stop()
 				} else {
-					fmt.Printf(successMessage(fmt.Sprintln("        ✔ Container already launched!")))
+					fmt.Println(successMessage("        ✔ Container already launched!"))
 					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully\n", container.Name)))
 					successCount++
 					fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
