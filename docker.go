@@ -93,6 +93,34 @@ func IsContainerRunning(ctx context.Context, container *Container) (bool, error)
 	return stats.State.Running || stats.State.Paused, nil
 }
 
+func BackendNetworkExists(ctx context.Context) bool {
+	cmdStr := fmt.Sprintf("network ls --filter name=%s --format '{{.Name}}'", Configuration.BackendNetwork)
+	cmd := exec.Command("docker", cmdStr)
+	output, _ := cmd.StdoutPipe()
+	cmd.Stderr = cmd.Stdout
+	scanner := bufio.NewScanner(output)
+	ok := false
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+
+	if scanner.Scan() {
+		line := scanner.Text()
+		ok = line == Configuration.BackendNetwork
+	}
+
+	if err := cmd.Wait(); err != nil {
+		panic(err)
+	}
+
+	return ok
+}
+
+func CreateBackendNetwork(ctx context.Context) error {
+	_, err := Docker.Client.NetworkCreate(ctx, Configuration.BackendNetwork, types.NetworkCreate{})
+	return err
+}
+
 func GetContainers() *[]Container {
 	cmd := exec.Command("docker", "container ls -a --filter \"name=vemta-\" --format \"{{.ID}} {{.Names}} {{.Image}} {{.Status}}\"")
 	return parseContainers(cmd)

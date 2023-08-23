@@ -51,6 +51,20 @@ func (s *VemtaService) Sync(workingDir string) error {
 	return nil
 }
 
+func (s *VemtaService) Build(workingDir string) error {
+	repoDir := fmt.Sprintf("%s\\%s", workingDir, s.FolderName)
+	if err := s.getDockerBuildComand(repoDir).Run(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *VemtaService) getDockerBuildComand(where string) *exec.Cmd {
+	cmd := exec.Command("docker-compose", "up", "-d", "--no-start")
+	cmd.Dir = where
+	return cmd
+}
+
 func (s *VemtaService) Clone(workingDir string) error {
 	return s.getCloneCommand(workingDir).Run()
 }

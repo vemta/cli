@@ -32,10 +32,18 @@ var launchCmd = &cobra.Command{
 	Run:     cli.LaunchCommand,
 }
 
-func init() {
+var buildCmd = &cobra.Command{
+	Use:     "build",
+	Aliases: []string{"up"},
+	Short:   "Build venta services",
+	Run:     cli.BuildCommand,
+}
 
+func init() {
+	launchCmd.Flags().BoolP("restart", "r", false, "Restart the container if it is already launched")
 	servicesCmd.AddCommand(launchCmd)
 	servicesCmd.AddCommand(pullCmd)
+	servicesCmd.AddCommand(buildCmd)
 	root.AddCommand(servicesCmd)
 }
 

@@ -39,6 +39,58 @@ func YesNoPrompt(label string, def bool) bool {
 	}
 }
 
+func BuildCommand(cmd *cobra.Command, args []string) {
+
+	ctx := context.Background()
+
+	availableServices := make([]string, 0, len(Services))
+	for _, soft := range Services {
+		availableServices = append(availableServices, soft.Name)
+	}
+
+	res := []string{}
+
+	prompt := &survey.MultiSelect{
+		Message: "Select the services you want to build",
+		Options: availableServices,
+	}
+
+	survey.AskOne(prompt, &res)
+
+	if !BackendNetworkExists(ctx) {
+		if err := CreateBackendNetwork(ctx); err != nil {
+			fmt.Println(errorMessage(fmt.Sprintf("Couldn't create backend network [✘]: %s", err.Error())))
+			return
+		}
+		fmt.Println(successMessage("Backend network created successfully! [✔]"))
+	}
+
+	for _, source := range res {
+
+		service, err := GetServiceByName(source)
+		if err != nil {
+			panic(err)
+		}
+
+		workdir, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+
+		writer := uilive.New()
+		writer.Start()
+		defer writer.Stop()
+
+		fmt.Fprintln(writer, processingMessage(fmt.Sprintf("Building service %s...", service.Name)))
+
+		if err := service.Build(workdir); err != nil {
+			fmt.Fprintln(writer, errorMessage(fmt.Sprintf("Couldn't build service %s [✘]: %s", service.Name, err.Error())))
+			continue
+		}
+		fmt.Fprintln(writer, successMessage(fmt.Sprintf("Service %s successfully built! [✔]", service.Name)))
+	}
+}
+
 func SyncCommand(cmd *cobra.Command, args []string) {
 
 	availableServices := make([]string, 0, len(Services))
@@ -69,6 +121,7 @@ func SyncCommand(cmd *cobra.Command, args []string) {
 
 		writer := uilive.New()
 		writer.Start()
+		defer writer.Stop()
 
 		if _, err := os.Stat(workdir + "/" + service.FolderName); os.IsNotExist(err) {
 			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Cloning %s repository...\n", service.Name)))
@@ -84,7 +137,6 @@ func SyncCommand(cmd *cobra.Command, args []string) {
 				continue
 			}
 			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s updated successfully [✔]\n", service.Name)))
-			writer.Stop()
 		}
 		fmt.Println("")
 	}
@@ -119,11 +171,12 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 
 		parentWriter := uilive.New()
 		parentWriter.Start()
+		defer parentWriter.Stop()
 
 		containers := GetContainersOfService(service)
 
 		if len(*containers) <= 0 {
-			fmt.Fprint(parentWriter, errorMessage(fmt.Sprintf("No containers found for service %s. Make sure you have executed the command: vemta services setup.\n", service.Name)))
+			fmt.Fprint(parentWriter, errorMessage(fmt.Sprintf("No containers found for service %s. Make sure you have executed the command: vemta services build.\n", service.Name)))
 			continue
 		}
 
@@ -136,6 +189,7 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 
 			containerWriter := uilive.New()
 			containerWriter.Start()
+			defer containerWriter.Stop()
 
 			fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    - Launching container %s", container.Name)))
 
@@ -143,24 +197,25 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 			if er != nil {
 				failedCount++
 				fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
-				fmt.Println(errorMessage("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services setup"))
+				fmt.Println(errorMessage("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services build"))
 				continue
 			}
 			fmt.Println(successMessage(fmt.Sprintln("        ✔ Container stats retrieved successfully!")))
 			if running {
 				if restart {
+
 					stoppingWriter := uilive.New()
 					stoppingWriter.Start()
+					defer stoppingWriter.Stop()
+
 					fmt.Fprint(stoppingWriter, processingMessage("        - Stopping container..."))
 					if err := StopContainer(ctx, &container); err != nil {
 						fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
 						fmt.Fprint(stoppingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't stop container: %s\n", err.Error())))
-						stoppingWriter.Stop()
 						failedCount++
 						continue
 					}
 					fmt.Fprintln(stoppingWriter, successMessage(("        ✔ Container stopped successfully!\n")))
-					stoppingWriter.Stop()
 				} else {
 					fmt.Println(successMessage("        ✔ Container already launched!"))
 					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully\n", container.Name)))
@@ -170,24 +225,23 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 				}
 			}
 			if !running || (running && restart) {
+
 				launchingWriter := uilive.New()
 				launchingWriter.Start()
+				defer launchingWriter.Stop()
+
 				fmt.Fprint(launchingWriter, processingMessage("        - Starting container..."))
 				if err := LaunchContainer(ctx, &container); err != nil {
 					fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
 					fmt.Fprint(launchingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't launch container: %s\n", err.Error())))
-					launchingWriter.Stop()
 					failedCount++
 					continue
 				}
 				fmt.Fprintln(launchingWriter, successMessage("        ✔ Container launched successfully!\n"))
 				successCount++
 				fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
-				launchingWriter.Stop()
 			}
-			containerWriter.Stop()
 		}
-		parentWriter.Stop()
 		fmt.Println("")
 	}
 }
