@@ -13,7 +13,7 @@ var root = &cobra.Command{
 	Short: "Vemta microservices management CLI",
 }
 
-var repositories = &cobra.Command{
+var servicesCmd = &cobra.Command{
 	Use:     "services",
 	Aliases: []string{"svc"},
 }
@@ -34,8 +34,9 @@ var launchCmd = &cobra.Command{
 
 func init() {
 
-	repositories.AddCommand(pullCmd)
-	root.AddCommand(repositories)
+	servicesCmd.AddCommand(launchCmd)
+	servicesCmd.AddCommand(pullCmd)
+	root.AddCommand(servicesCmd)
 }
 
 func main() {

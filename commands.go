@@ -143,10 +143,10 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 			if er != nil {
 				failedCount++
 				fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
-				fmt.Printf(errorMessage(fmt.Sprintf("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services setup\n")))
+				fmt.Println(errorMessage("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services setup"))
 				continue
 			}
-			fmt.Printf(successMessage(fmt.Sprintf("        ✔ Container stats retrieved successfully!\n")))
+			fmt.Println(successMessage(fmt.Sprintln("        ✔ Container stats retrieved successfully!")))
 			if running {
 				if restart {
 					stoppingWriter := uilive.New()
@@ -159,13 +159,13 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 						failedCount++
 						continue
 					}
-					fmt.Fprint(stoppingWriter, successMessage(fmt.Sprintf("        ✔ Container stopped successfully!\n")))
+					fmt.Fprintln(stoppingWriter, successMessage(("        ✔ Container stopped successfully!\n")))
 					stoppingWriter.Stop()
 				} else {
-					fmt.Printf(successMessage(fmt.Sprintf("        ✔ Container already launched!\n")))
+					fmt.Printf(successMessage(fmt.Sprintln("        ✔ Container already launched!")))
 					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully\n", container.Name)))
 					successCount++
-					fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, (*containers))))
+					fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
 					continue
 				}
 			}
@@ -180,15 +180,13 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 					failedCount++
 					continue
 				}
-				fmt.Fprint(launchingWriter, successMessage(fmt.Sprintf("        ✔ Container launched successfully!\n")))
+				fmt.Fprintln(launchingWriter, successMessage("        ✔ Container launched successfully!\n"))
 				successCount++
-				fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, (*containers))))
+				fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
 				launchingWriter.Stop()
 			}
 			containerWriter.Stop()
-
 		}
-
 		parentWriter.Stop()
 		fmt.Println("")
 	}
