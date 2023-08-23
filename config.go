@@ -1,10 +1,11 @@
 package cli
 
-type ContainerConfig struct {
-	ServiceName string `json:"service_name"`
-	ContainerID string `json:"container"`
-}
+var Configuration Config
 
 type Config struct {
-	Containers []ContainerConfig `json:"containers"`
+	Services []ServiceConfig `json:"services"`
+}
+type ServiceConfig struct {
+	ServiceName string      `json:"service_name"`
+	Containers  []Container `json:"containers"`
 }

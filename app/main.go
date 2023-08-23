@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/vemta/cli/commands"
+	"github.com/vemta/cli"
 )
 
 var root = &cobra.Command{
@@ -20,9 +20,9 @@ var repositories = &cobra.Command{
 
 var pullCmd = &cobra.Command{
 	Use:     "sync",
-	Aliases: []string{"update", "pull"},
+	Aliases: []string{"update", "pull", "synchronize"},
 	Short:   "Pull and synchronize all the Vemta repositories",
-	Run:     commands.PullCommand,
+	Run:     cli.SyncCommand,
 }
 
 func init() {
