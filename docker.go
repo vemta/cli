@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -94,8 +93,7 @@ func IsContainerRunning(ctx context.Context, container *Container) (bool, error)
 }
 
 func BackendNetworkExists(ctx context.Context) bool {
-	cmdStr := fmt.Sprintf("network ls --filter name=%s --format '{{.Name}}'", Configuration.BackendNetwork)
-	cmd := exec.Command("docker", cmdStr)
+	cmd := exec.Command("docker", "network", "ls", "--filter", "name="+Configuration.BackendNetwork, "'{{.Name}}'")
 	output, _ := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	scanner := bufio.NewScanner(output)
