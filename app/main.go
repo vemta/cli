@@ -1,8 +1,11 @@
 package main
 
 import (
+	"log"
 	"os"
+	"os/exec"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vemta/cli"
@@ -63,12 +66,12 @@ func main() {
 	viper.SetConfigType("json")
 	viper.ReadInConfig()
 
-	/*for _, software := range cli.MustHaveSoftwares {
+	for _, software := range cli.MustHaveSoftwares {
 		if _, err := exec.LookPath(software); err != nil {
 			log.Fatal(color.New(color.FgRed).Sprintf("Couldn't find %s! Make sure it is installed and added to the path.", software))
 			return
 		}
-	}*/
+	}
 
 	root.Execute()
 

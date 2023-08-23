@@ -2,8 +2,8 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"os/exec"
+	"path/filepath"
 )
 
 var Services = []VemtaService{
@@ -41,7 +41,7 @@ type VemtaService struct {
 }
 
 func (s *VemtaService) Sync(workingDir string) error {
-	repoDir := fmt.Sprintf("%s\\%s", workingDir, s.FolderName)
+	repoDir := filepath.Join(workingDir, s.FolderName)
 	if err := s.getResetCommand(repoDir).Run(); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (s *VemtaService) Sync(workingDir string) error {
 }
 
 func (s *VemtaService) Build(workingDir string) error {
-	repoDir := fmt.Sprintf("%s\\%s", workingDir, s.FolderName)
+	repoDir := filepath.Join(workingDir, s.FolderName)
 	if err := s.getDockerBuildComand(repoDir).Run(); err != nil {
 		return err
 	}
@@ -70,18 +70,15 @@ func (s *VemtaService) Clone(workingDir string) error {
 }
 
 func (s *VemtaService) getResetCommand(where string) *exec.Cmd {
-	params := fmt.Sprintf("-C %s reset --hard HEAD", where)
-	return exec.Command("git", params)
+	return exec.Command("git", "-C", where, "reset", "--hard", "HEAD")
 }
 
 func (s *VemtaService) getPullCommand(where string) *exec.Cmd {
-	params := fmt.Sprintf("-C %s pull origin master", where)
-	return exec.Command("git", params)
+	return exec.Command("git", "-C", where, "pull", "oritin", "master")
 }
 
 func (s *VemtaService) getCloneCommand(where string) *exec.Cmd {
-	params := fmt.Sprintf("-C %s clone %s", where, s.Repository)
-	return exec.Command("git", params)
+	return exec.Command("git", "-C", where, "clone", s.Repository)
 }
 
 func GetServiceByName(name string) (*VemtaService, error) {

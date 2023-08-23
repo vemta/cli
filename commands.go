@@ -133,7 +133,7 @@ func SyncCommand(cmd *cobra.Command, args []string) {
 		} else {
 			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Synchronizing %s repository...\n", service.Name)))
 			if err := service.Sync(workdir); err != nil {
-				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't clone %s repository [✘]: %s\n", service.Name, err.Error())))
+				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't sync %s repository [✘]: %s\n", service.Name, err.Error())))
 				continue
 			}
 			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s updated successfully [✔]\n", service.Name)))

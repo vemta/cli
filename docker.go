@@ -122,13 +122,12 @@ func CreateBackendNetwork(ctx context.Context) error {
 }
 
 func GetContainers() *[]Container {
-	cmd := exec.Command("docker", "container ls -a --filter \"name=vemta-\" --format \"{{.ID}} {{.Names}} {{.Image}} {{.Status}}\"")
+	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-'", "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
 	return parseContainers(cmd)
 }
 
 func GetContainersOfService(service *VemtaService) *[]Container {
-	cmdStr := fmt.Sprintf("container ls -a --filter \"name=vemta-%s\" --format \"{{.ID}} {{.Names}} {{.Image}} {{.Status}}\"", service.DockerPrefix)
-	cmd := exec.Command("docker", cmdStr)
+	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-'"+service.DockerPrefix, "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
 	return parseContainers(cmd)
 }
 
