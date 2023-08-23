@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -90,7 +91,107 @@ func SyncCommand(cmd *cobra.Command, args []string) {
 }
 
 func LaunchCommand(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
+	availableServices := make([]string, 0, len(Services))
+	for _, soft := range Services {
+		availableServices = append(availableServices, soft.Name)
+	}
 
+	res := []string{}
+	restart, err := cmd.Flags().GetBool("restart")
+	if err != nil {
+		panic(err)
+	}
+
+	prompt := &survey.MultiSelect{
+		Message: "Select the services you want to launch/restart",
+		Options: availableServices,
+	}
+
+	survey.AskOne(prompt, &res)
+
+	for _, source := range res {
+
+		service, err := GetServiceByName(source)
+		if err != nil {
+			panic(err)
+		}
+
+		parentWriter := uilive.New()
+		parentWriter.Start()
+
+		containers := GetContainersOfService(service)
+
+		if len(*containers) <= 0 {
+			fmt.Fprint(parentWriter, errorMessage(fmt.Sprintf("No containers found for service %s. Make sure you have executed the command: vemta services setup.\n", service.Name)))
+			continue
+		}
+
+		fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s...[0/%d]", service.Name, len(*containers))))
+
+		failedCount := 0
+		successCount := 0
+
+		for _, container := range *containers {
+
+			containerWriter := uilive.New()
+			containerWriter.Start()
+
+			fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    - Launching container %s", container.Name)))
+
+			running, er := IsContainerRunning(ctx, &container)
+			if er != nil {
+				failedCount++
+				fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
+				fmt.Printf(errorMessage(fmt.Sprintf("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services setup\n")))
+				continue
+			}
+			fmt.Printf(successMessage(fmt.Sprintf("        ✔ Container stats retrieved successfully!\n")))
+			if running {
+				if restart {
+					stoppingWriter := uilive.New()
+					stoppingWriter.Start()
+					fmt.Fprint(stoppingWriter, processingMessage("        - Stopping container..."))
+					if err := StopContainer(ctx, &container); err != nil {
+						fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
+						fmt.Fprint(stoppingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't stop container: %s\n", err.Error())))
+						stoppingWriter.Stop()
+						failedCount++
+						continue
+					}
+					fmt.Fprint(stoppingWriter, successMessage(fmt.Sprintf("        ✔ Container stopped successfully!\n")))
+					stoppingWriter.Stop()
+				} else {
+					fmt.Printf(successMessage(fmt.Sprintf("        ✔ Container already launched!\n")))
+					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully\n", container.Name)))
+					successCount++
+					fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, (*containers))))
+					continue
+				}
+			}
+			if !running || (running && restart) {
+				launchingWriter := uilive.New()
+				launchingWriter.Start()
+				fmt.Fprint(launchingWriter, processingMessage("        - Starting container..."))
+				if err := LaunchContainer(ctx, &container); err != nil {
+					fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
+					fmt.Fprint(launchingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't launch container: %s\n", err.Error())))
+					launchingWriter.Stop()
+					failedCount++
+					continue
+				}
+				fmt.Fprint(launchingWriter, successMessage(fmt.Sprintf("        ✔ Container launched successfully!\n")))
+				successCount++
+				fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, (*containers))))
+				launchingWriter.Stop()
+			}
+			containerWriter.Stop()
+
+		}
+
+		parentWriter.Stop()
+		fmt.Println("")
+	}
 }
 
 func errorMessage(msg string) string {

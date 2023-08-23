@@ -21,8 +21,15 @@ var repositories = &cobra.Command{
 var pullCmd = &cobra.Command{
 	Use:     "sync",
 	Aliases: []string{"update", "pull", "synchronize"},
-	Short:   "Pull and synchronize all the Vemta repositories",
+	Short:   "Pull and synchronize Vemta repositories",
 	Run:     cli.SyncCommand,
+}
+
+var launchCmd = &cobra.Command{
+	Use:     "launch",
+	Aliases: []string{"up", "start"},
+	Short:   "Launch Vemta services's containers",
+	Run:     cli.LaunchCommand,
 }
 
 func init() {
