@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/docker/docker/client"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -51,6 +52,17 @@ func init() {
 }
 
 func main() {
+
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	cli.Docker = cli.DockerClient{
+		Client: dockerClient,
+	}
+
+	defer dockerClient.Close()
 
 	if err := viper.SafeWriteConfigAs("./config.json"); err != nil {
 		if os.IsNotExist(err) {

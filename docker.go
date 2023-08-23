@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 
@@ -98,17 +99,15 @@ func BackendNetworkExists(ctx context.Context) bool {
 	cmd.Stderr = cmd.Stdout
 	scanner := bufio.NewScanner(output)
 	ok := false
-	if err := cmd.Start(); err != nil {
-		panic(err)
+
+	if err := cmd.Run(); err != nil {
+		fmt.Println(err.Error())
+		return false
 	}
 
 	if scanner.Scan() {
 		line := scanner.Text()
 		ok = line == Configuration.BackendNetwork
-	}
-
-	if err := cmd.Wait(); err != nil {
-		panic(err)
 	}
 
 	return ok
