@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -88,14 +87,13 @@ func GetCreatedContainers(ctx context.Context) (*[]Container, error) {
 func IsContainerRunning(ctx context.Context, container *Container) (bool, error) {
 	stats, err := Docker.Client.ContainerInspect(ctx, container.Id)
 	if err != nil {
-		fmt.Println(err.Error())
 		return false, err
 	}
 	return stats.State.Running || stats.State.Paused, nil
 }
 
 func BackendNetworkExists(ctx context.Context) bool {
-	cmd := exec.Command("docker", "network", "ls", "--filter", "name="+Configuration.BackendNetwork, "'{{.Name}}'")
+	cmd := exec.Command("docker", "network", "ls", "--filter", "name="+Configuration.BackendNetwork, "{{.Name}}")
 	output, _ := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	scanner := bufio.NewScanner(output)

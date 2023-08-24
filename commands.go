@@ -81,13 +81,13 @@ func BuildCommand(cmd *cobra.Command, args []string) {
 		writer.Start()
 		defer writer.Stop()
 
-		fmt.Fprintln(writer, processingMessage(fmt.Sprintf("Building service %s...", service.Name)))
+		fmt.Fprint(writer, processingMessage(fmt.Sprintf("Building service %s...", service.Name)))
 
 		if err := service.Build(workdir); err != nil {
-			fmt.Fprintln(writer, errorMessage(fmt.Sprintf("Couldn't build service %s [✘]: %s", service.Name, err.Error())))
+			fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't build service %s [✘]: %s", service.Name, err.Error())))
 			continue
 		}
-		fmt.Fprintln(writer, successMessage(fmt.Sprintf("Service %s successfully built! [✔]", service.Name)))
+		fmt.Fprint(writer, successMessage(fmt.Sprintf("Service %s successfully built! [✔]", service.Name)))
 	}
 }
 
@@ -124,19 +124,19 @@ func SyncCommand(cmd *cobra.Command, args []string) {
 		defer writer.Stop()
 
 		if _, err := os.Stat(workdir + "/" + service.FolderName); os.IsNotExist(err) {
-			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Cloning %s repository...\n", service.Name)))
+			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Cloning %s repository...", service.Name)))
 			if err := service.Clone(workdir); err != nil {
-				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't clone %s repository [✘]: %s\n", service.Name, err.Error())))
+				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't clone %s repository [✘]: %s", service.Name, err.Error())))
 				continue
 			}
-			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s cloned successfully [✔]\n", service.Name)))
+			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s cloned successfully [✔]", service.Name)))
 		} else {
-			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Synchronizing %s repository...\n", service.Name)))
+			fmt.Fprint(writer, processingMessage(fmt.Sprintf("Synchronizing %s repository...", service.Name)))
 			if err := service.Sync(workdir); err != nil {
-				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't sync %s repository [✘]: %s\n", service.Name, err.Error())))
+				fmt.Fprint(writer, errorMessage(fmt.Sprintf("Couldn't sync %s repository [✘]: %s", service.Name, err.Error())))
 				continue
 			}
-			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s updated successfully [✔]\n", service.Name)))
+			fmt.Fprint(writer, successMessage(fmt.Sprintf("Repository %s updated successfully [✔]", service.Name)))
 		}
 		fmt.Println("")
 	}
@@ -176,7 +176,7 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 		containers := GetContainersOfService(service)
 
 		if len(*containers) <= 0 {
-			fmt.Fprint(parentWriter, errorMessage(fmt.Sprintf("No containers found for service %s. Make sure you have executed the command: vemta services build.\n", service.Name)))
+			fmt.Fprint(parentWriter, errorMessage(fmt.Sprintf("No containers found for service %s. Make sure you have executed the command: vemta services build.", service.Name)))
 			continue
 		}
 
@@ -210,17 +210,17 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 
 					fmt.Fprint(stoppingWriter, processingMessage("        - Stopping container..."))
 					if err := StopContainer(ctx, &container); err != nil {
-						fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
-						fmt.Fprint(stoppingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't stop container: %s\n", err.Error())))
+						fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch faile", container.Name)))
+						fmt.Fprint(stoppingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't stop container: %s", err.Error())))
 						failedCount++
 						continue
 					}
-					fmt.Fprintln(stoppingWriter, successMessage(("        ✔ Container stopped successfully!\n")))
+					fmt.Fprint(stoppingWriter, successMessage(("        ✔ Container stopped successfully!")))
 				} else {
 					fmt.Println(successMessage("        ✔ Container already launched!"))
 					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully", container.Name)))
 					successCount++
-					fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
+					fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
 					continue
 				}
 			}
@@ -232,14 +232,14 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 
 				fmt.Fprint(launchingWriter, processingMessage("        - Starting container..."))
 				if err := LaunchContainer(ctx, &container); err != nil {
-					fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
-					fmt.Fprint(launchingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't launch container: %s\n", err.Error())))
+					fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed", container.Name)))
+					fmt.Fprint(launchingWriter, errorMessage(fmt.Sprintf("        ✘ Couldn't launch container: %s", err.Error())))
 					failedCount++
 					continue
 				}
-				fmt.Fprintln(launchingWriter, successMessage("        ✔ Container launched successfully!\n"))
+				fmt.Fprint(launchingWriter, successMessage("        ✔ Container launched successfully!"))
 				successCount++
-				fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
+				fmt.Fprint(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
 			}
 		}
 		fmt.Println("")
