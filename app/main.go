@@ -76,7 +76,9 @@ func main() {
 	viper.AddConfigPath("./")
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
+	viper.SetDefault("backend_network", "vemta_backend")
 	viper.ReadInConfig()
+	RefreshConfig()
 
 	for _, software := range cli.MustHaveSoftwares {
 		if _, err := exec.LookPath(software); err != nil {
@@ -86,5 +88,13 @@ func main() {
 	}
 
 	root.Execute()
+}
 
+func RefreshConfig() {
+	c := &cli.Config{}
+	err := viper.Unmarshal(c)
+	if err != nil {
+		panic(err)
+	}
+	cli.Configuration = *c
 }

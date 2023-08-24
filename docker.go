@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -101,7 +100,6 @@ func BackendNetworkExists(ctx context.Context) bool {
 	ok := false
 
 	if err := cmd.Run(); err != nil {
-		fmt.Println(err.Error())
 		return false
 	}
 
@@ -134,7 +132,7 @@ func parseContainers(cmd *exec.Cmd) *[]Container {
 	cmd.Stderr = cmd.Stdout
 	scanner := bufio.NewScanner(output)
 
-	if err := cmd.Start(); err != nil {
+	if err := cmd.Run(); err != nil {
 		panic(err)
 	}
 
@@ -148,10 +146,6 @@ func parseContainers(cmd *exec.Cmd) *[]Container {
 			Image:    params[2],
 			Launched: params[3] == "Up",
 		})
-	}
-
-	if err := cmd.Wait(); err != nil {
-		panic(err)
 	}
 
 	return &containers
