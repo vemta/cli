@@ -196,7 +196,7 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 			running, er := IsContainerRunning(ctx, &container)
 			if er != nil {
 				failedCount++
-				fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed\n", container.Name)))
+				fmt.Fprint(containerWriter, errorMessage(fmt.Sprintf("    ✘ Container %s launch failed", container.Name)))
 				fmt.Println(errorMessage("        ✘ Coudln't retrieve container stats. Make sure you have execute the command: vemta services build"))
 				continue
 			}
@@ -218,7 +218,7 @@ func LaunchCommand(cmd *cobra.Command, args []string) {
 					fmt.Fprintln(stoppingWriter, successMessage(("        ✔ Container stopped successfully!\n")))
 				} else {
 					fmt.Println(successMessage("        ✔ Container already launched!"))
-					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully\n", container.Name)))
+					fmt.Fprint(containerWriter, processingMessage(fmt.Sprintf("    Container %s launched successfully", container.Name)))
 					successCount++
 					fmt.Fprintln(parentWriter, processingMessage(fmt.Sprintf("↑ Launching service %s... [%d/%d]", service.Name, successCount, len(*containers))))
 					continue

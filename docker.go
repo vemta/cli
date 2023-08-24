@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 
@@ -87,6 +88,7 @@ func GetCreatedContainers(ctx context.Context) (*[]Container, error) {
 func IsContainerRunning(ctx context.Context, container *Container) (bool, error) {
 	stats, err := Docker.Client.ContainerInspect(ctx, container.Id)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false, err
 	}
 	return stats.State.Running || stats.State.Paused, nil
@@ -117,12 +119,12 @@ func CreateBackendNetwork(ctx context.Context) error {
 }
 
 func GetContainers() *[]Container {
-	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-'", "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
+	cmd := exec.Command("docker", "container", "ls", "-a", "--no-trunc", "--filter", "name=vemta-", "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
 	return parseContainers(cmd)
 }
 
 func GetContainersOfService(service *VemtaService) *[]Container {
-	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-"+service.DockerPrefix+"'", "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
+	cmd := exec.Command("docker", "container", "ls", "-a", "--no-trunc", "--filter", "name=vemta-"+service.DockerPrefix, "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
 	return parseContainers(cmd)
 }
 
@@ -132,14 +134,11 @@ func parseContainers(cmd *exec.Cmd) *[]Container {
 	cmd.Stderr = cmd.Stdout
 	scanner := bufio.NewScanner(output)
 
-	if err := cmd.Run(); err != nil {
-		panic(err)
-	}
+	cmd.Start()
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		params := strings.Split(line, " ")
-
 		containers = append(containers, Container{
 			Id:       params[0],
 			Name:     params[1],
@@ -147,6 +146,8 @@ func parseContainers(cmd *exec.Cmd) *[]Container {
 			Launched: params[3] == "Up",
 		})
 	}
+
+	cmd.Wait()
 
 	return &containers
 }
