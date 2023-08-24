@@ -122,7 +122,7 @@ func GetContainers() *[]Container {
 }
 
 func GetContainersOfService(service *VemtaService) *[]Container {
-	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-'"+service.DockerPrefix, "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
+	cmd := exec.Command("docker", "container", "ls", "-a", "--filter", "'name=vemta-"+service.DockerPrefix+"'", "--format", "'{{.ID}} {{.Names}} {{.Image}} {{.Status}}'")
 	return parseContainers(cmd)
 }
 
